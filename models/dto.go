@@ -1,5 +1,10 @@
 package models
 
+type Config struct {
+	Uri      string
+	Database string
+}
+
 type Seq struct {
 	ID  string `bson:"_id"`
 	Seq int
