@@ -1,6 +1,8 @@
 package shortnr
 
-import "errors"
+import (
+	"errors"
+)
 
 func SaveRecord() error {
 	return errors.New("not implemented")
