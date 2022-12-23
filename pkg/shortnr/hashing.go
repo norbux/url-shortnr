@@ -23,7 +23,7 @@ func toBase62(d int) string {
 	return hash
 }
 
-func NewHash(seq int) (string, error) {
+func B62Hash(seq int) (string, error) {
 	if seq < 1 {
 		return "", errors.New("sequence number must be greater than zero")
 	}
@@ -40,5 +40,5 @@ func Xxh3Hash(input string) (hash string, err error) {
 	_, _ = hasher.WriteString(input)
 	hash = hex.EncodeToString(hasher.Sum(nil))
 
-	return hash, nil
+	return string(hash[:6]), nil
 }
