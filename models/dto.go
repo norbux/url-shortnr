@@ -15,3 +15,11 @@ type ShortURL struct {
 	LongURL string
 	Hash    string
 }
+
+type HashRequest struct {
+	Seq string `json:"seq"`
+}
+
+type HashResponse struct {
+	Hash string `json:"hash"`
+}
