@@ -55,7 +55,7 @@ func TestHashing(t *testing.T) {
 		tt := &cases[i]
 
 		t.Run(tt.name, func(t *testing.T) {
-			hash, err := NewHash(tt.seq)
+			hash, err := B62Hash(tt.seq)
 			if err != nil {
 				t.Fatalf("failed to generate new hash: %+v", err)
 			}
