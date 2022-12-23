@@ -20,7 +20,7 @@ func main() {
 	}
 
 	mongoUri := os.Getenv("MONGO_URI")
-	//mongoDatabase := os.Getenv("MONGO_DATABASE")
+	mongoDatabase := os.Getenv("MONGO_DATABASE")
 
 	client, err := mongo.NewClient(options.Client().ApplyURI(mongoUri))
 
@@ -36,12 +36,14 @@ func main() {
 	}
 	defer client.Disconnect(ctx)
 
-	srv := shortnr.NewService(client)
+	srv := shortnr.NewService(client, mongoDatabase)
 
 	app := fiber.New()
 
 	app.Get("/b", srv.GetURLB62)
 	app.Get("/x", srv.GetURLXxh3)
+	app.Post("/x", srv.NewXxh3)
+	app.Post("/b", srv.NewB62)
 
 	app.Listen(":8080")
 }
