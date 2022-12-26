@@ -3,22 +3,46 @@ package shortnr
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/norbux/url-shortnr/models"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SaveRecord() error {
-	return errors.New("not implemented")
+func (s *service) SaveRecord(urlMap *models.URLMap) error {
+	if len(urlMap.LongURL) < 1 || len(urlMap.Hash) < 1 {
+		return errors.New("the URL value is empty")
+	}
+
+	coll := s.Client.Database(s.Database).Collection("url_map")
+	result, err := coll.InsertOne(context.Background(), urlMap)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("%v", result.InsertedID)
+
+	return nil
 }
 
-func GetURL() (string, error) {
-	return "", errors.New("not implemented")
+func (s *service) GetRecord(hash string) (string, error) {
+	if len(hash) < 1 {
+		return "", errors.New("hash can't be empty string")
+	}
+
+	resp := new(models.URLMap)
+	coll := s.Client.Database(s.Database).Collection("url_map")
+	filter := bson.D{{"hash", hash}}
+	err := coll.FindOne(context.Background(), filter, nil).Decode(&resp)
+	if err != nil {
+		return "", err
+	}
+
+	return resp.LongURL, nil
 }
 
-func NextSeq(client *mongo.Client, database string) (int, error) {
-	coll := client.Database(database).Collection("seq")
+func (s *service) NextSeq() (int, error) {
+	coll := s.Client.Database(s.Database).Collection("seq")
 	filter := bson.D{{"_id", "counter"}}
 
 	var counter models.Seq
@@ -27,22 +51,6 @@ func NextSeq(client *mongo.Client, database string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-
-	// err := coll.FindOne(context.Background(), filter).Decode(&counter)
-	// if err != nil {
-	// 	if err == mongo.ErrNoDocuments {
-	// 		return 0, errors.New("no conter sequence found in the database")
-	// 	}
-
-	// 	return 0, errors.New("failed to get next sequence index")
-	// }
-
-	// update := bson.D{{"$inc", bson.D{{"seq", 1}}}}
-	// filter = bson.D{{"_id", counter.ID}}
-	// result, err := coll.UpdateOne(context.Background(), filter, update)
-	// if err != nil {
-	// 	return 0, err
-	// }
 
 	return counter.Seq, nil
 }

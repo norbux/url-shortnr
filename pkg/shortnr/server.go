@@ -1,6 +1,8 @@
 package shortnr
 
 import (
+	"errors"
+	"regexp"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -10,10 +12,9 @@ import (
 )
 
 type Server interface {
-	NewXxh3(c *fiber.Ctx) error
-	NewB62(c *fiber.Ctx) error
-	GetURLXxh3(c *fiber.Ctx) error
-	GetURLB62(c *fiber.Ctx) error
+	GetRecord(hash string) (string, error)
+	Short(c *fiber.Ctx) error
+	GetURL(c *fiber.Ctx) error
 }
 
 type service struct {
@@ -25,42 +26,63 @@ func NewService(client *mongo.Client, db string) Server {
 	return &service{Client: client, Database: db}
 }
 
-func (s *service) NewXxh3(c *fiber.Ctx) error {
-	nextSeq, err := NextSeq(s.Client, s.Database)
+func (s *service) Short(c *fiber.Ctx) error {
+	req := new(models.NewHashRequest)
+	err := c.BodyParser(req)
 	if err != nil {
 		return err
 	}
 
-	hash, err := Xxh3Hash(strconv.Itoa(nextSeq))
+	if req.Method < 1 {
+		return fiber.ErrBadRequest
+	}
+
+	nextSeq, err := s.NextSeq()
 	if err != nil {
 		return err
 	}
 
-	resp := models.HashResponse{Hash: hash}
+	var hash string
+
+	switch req.Method {
+	case 1:
+		hash, err = Xxh3Hash(strconv.Itoa(nextSeq))
+		if err != nil {
+			return err
+		}
+	case 2:
+		hash, err = B62Hash(nextSeq)
+		if err != nil {
+			return err
+		}
+	}
+
+	record := models.URLMap{LongURL: req.URL, Hash: hash}
+	err = s.SaveRecord(&record)
+	if err != nil {
+		return err
+	}
+
+	resp := models.NewHashResponse{URL: req.URL, Hash: hash}
 
 	return c.JSON(resp)
 }
 
-func (s *service) NewB62(c *fiber.Ctx) error {
-	nextSeq, err := NextSeq(s.Client, s.Database)
+func (s *service) GetURL(c *fiber.Ctx) error {
+	hash := c.Params("hash")
+	matched, err := regexp.MatchString(`\b[0-9a-fA-F]+\b`, hash)
+	if err != nil {
+		return errors.New("bad hash input")
+	}
+
+	if len(hash) < 1 || !matched {
+		return errors.New("empty or invalid hash string")
+	}
+
+	url, err := s.GetRecord(hash)
 	if err != nil {
 		return err
 	}
 
-	hash, err := B62Hash(nextSeq)
-	if err != nil {
-		return err
-	}
-
-	resp := models.HashResponse{Hash: hash}
-
-	return c.JSON(resp)
-}
-
-func (s *service) GetURLXxh3(c *fiber.Ctx) error {
-	return nil
-}
-
-func (s *service) GetURLB62(c *fiber.Ctx) error {
-	return nil
+	return c.Redirect(url, fiber.StatusFound)
 }
