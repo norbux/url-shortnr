@@ -13,4 +13,4 @@ The maping of short and long URLs is stored in a MongoDB collection. The databas
 
 ### What this project is NOT
 
-This project is a proof of concept and does not contemplate running at scale. It doesn't include user/access management and only focuses in URL shortening mechanics.
+This project is a proof of concept and does not contemplate running at scale. It doesn't include user/access management and only focuses in URL shortening mechanics. The data store administration is out of the scope of this project.
