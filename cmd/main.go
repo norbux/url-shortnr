@@ -40,10 +40,8 @@ func main() {
 
 	app := fiber.New()
 
-	app.Get("/b", srv.GetURLB62)
-	app.Get("/x", srv.GetURLXxh3)
-	app.Post("/x", srv.NewXxh3)
-	app.Post("/b", srv.NewB62)
+	app.Get("/s/:hash", srv.GetURL)
+	app.Post("/short", srv.Short)
 
 	app.Listen(":8080")
 }
